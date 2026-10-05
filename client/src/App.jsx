@@ -37,9 +37,13 @@ function MainContent() {
       const resumes = await api.getResumes();
       if (resumes && resumes.length > 0) {
         setCurrentResume(resumes[0]);
-        // Also get initial ATS audit
-        const atsData = await api.getAtsScore(resumes[0], resumes[0].targetRole);
-        setAtsAnalysis(atsData);
+        // Also get initial ATS audit safely
+        try {
+          const atsData = await api.getAtsScore(resumes[0], resumes[0].targetRole);
+          setAtsAnalysis(atsData);
+        } catch (atsErr) {
+          console.warn('ATS initial audit skipped:', atsErr.message);
+        }
       }
     } catch (err) {
       console.warn('Could not load resumes:', err.message);

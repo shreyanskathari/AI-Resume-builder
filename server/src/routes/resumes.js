@@ -22,7 +22,77 @@ router.use(authMiddleware);
 
 // Get all user's resumes
 router.get('/', (req, res) => {
-  const list = db.getResumesByUser(req.user.id);
+  let list = db.getResumesByUser(req.user.id);
+  if (!list || list.length === 0) {
+    const defaultResume = db.createResume({
+      userId: req.user.id,
+      title: `${req.user.name || 'Primary'}'s Resume`,
+      targetRole: req.user.role || 'Software Engineer',
+      templateId: 'modern',
+      personalInfo: {
+        fullName: req.user.name || 'Student Candidate',
+        title: req.user.role || 'Software Engineer & CS Graduate',
+        email: req.user.email || '',
+        phone: '+1 (555) 019-2834',
+        location: 'San Francisco, CA',
+        linkedin: 'https://linkedin.com',
+        github: 'https://github.com',
+        portfolio: '',
+        summary: `Motivated ${req.user.role || 'Computer Science student'} with a solid foundation in modern web development, algorithms, and software engineering principles. Dedicated to writing clean, maintainable code and solving challenging problems in collaborative agile environments.`
+      },
+      education: [
+        {
+          id: 'edu-1',
+          institution: 'University / Institute of Technology',
+          degree: 'Bachelor of Science / Technology',
+          fieldOfStudy: req.user.role || 'Computer Science & Engineering',
+          location: 'City, State',
+          startDate: '2022-08',
+          endDate: '2026-05',
+          gpa: '3.8 / 4.0',
+          honors: "Dean's Honor List",
+          coursework: 'Data Structures, Operating Systems, Database Management Systems, Cloud Computing'
+        }
+      ],
+      skills: {
+        technical: ['JavaScript (ES6+)', 'TypeScript', 'Python', 'Java', 'SQL', 'HTML/CSS'],
+        frameworks: ['React.js', 'Next.js', 'Node.js', 'Express.js', 'Tailwind CSS'],
+        tools: ['Git & GitHub', 'Docker', 'Postman', 'VS Code', 'MongoDB', 'PostgreSQL'],
+        soft: ['Agile / Scrum', 'Problem Solving', 'Technical Communication', 'Team Leadership'],
+        languages: ['English (Fluent)']
+      },
+      projects: [
+        {
+          id: 'proj-1',
+          title: 'CareerCraft AI - Intelligent Career Platform',
+          techStack: 'React, Node.js, Express, Tailwind CSS, REST APIs',
+          liveUrl: 'https://careercraft-ai-demo.onrender.com',
+          githubUrl: 'https://github.com',
+          startDate: '2025-08',
+          endDate: '2025-12',
+          bullets: [
+            'Architected a full-stack career acceleration application featuring real-time ATS scoring and AI-driven resume optimization.',
+            'Implemented interactive resume templates with instantaneous live preview, reducing resume crafting time by 60%.',
+            'Engineered RESTful API endpoints with JWT authentication and secure session management.'
+          ]
+        }
+      ],
+      internships: [],
+      experience: [],
+      certifications: [],
+      achievements: [
+        {
+          id: 'ach-1',
+          title: 'University Hackathon Finalist',
+          date: '2025-03',
+          description: 'Designed and deployed a full-stack web application within a 36-hour sprint.'
+        }
+      ],
+      atsScore: 88,
+      resumeScore: 90
+    });
+    list = [defaultResume];
+  }
   res.json({ resumes: list });
 });
 
