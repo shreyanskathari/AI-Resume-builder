@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 export default function AiGrammarModal({ isOpen, onClose, initialText, onApplyText }) {
   const [text, setText] = useState(initialText || '');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
   useEffect(() => {
@@ -20,11 +21,13 @@ export default function AiGrammarModal({ isOpen, onClose, initialText, onApplyTe
   const handleCheck = async (inputText = text) => {
     if (!inputText || inputText.trim() === '') return;
     setLoading(true);
+    setError(null);
     try {
       const data = await api.checkGrammar(inputText);
       setResult(data);
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Failed to check grammar. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -92,6 +95,23 @@ export default function AiGrammarModal({ isOpen, onClose, initialText, onApplyTe
             </motion.button>
           </div>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-5 flex items-start gap-3 p-3.5 rounded-xl bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200 dark:border-rose-900 text-xs">
+            <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold">{error}</p>
+              <button
+                type="button"
+                onClick={() => handleCheck()}
+                className="mt-2 inline-flex items-center gap-1 font-semibold underline text-rose-700 dark:text-rose-300 hover:opacity-80"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Results */}
         {result?.improvedText && (

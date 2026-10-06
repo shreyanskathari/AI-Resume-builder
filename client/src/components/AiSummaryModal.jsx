@@ -1,22 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import { Sparkles, Check, Loader2, X, Copy, BookOpen } from 'lucide-react';
+import { Sparkles, Check, Loader2, X, Copy, BookOpen, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function AiSummaryModal({ isOpen, onClose, currentRole, skills, education, onSelectSummary }) {
   const [role, setRole] = useState(currentRole || 'Software Engineer');
   const [tone, setTone] = useState('impactful');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [results, setResults] = useState(null);
   const [copiedIdx, setCopiedIdx] = useState(null);
+
+  useEffect(() => {
+    if (currentRole) {
+      setRole(currentRole);
+    }
+  }, [currentRole]);
 
   if (!isOpen) return null;
 
   const handleGenerate = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await api.generateSummary({
-        targetRole: role,
+        targetRole: role || 'Software Engineer',
         skills: Array.isArray(skills) ? skills : Object.values(skills || {}).flat(),
         education: education?.[0]?.degree ? `${education[0].degree} from ${education[0].institution}` : '',
         tone
@@ -24,6 +32,7 @@ export default function AiSummaryModal({ isOpen, onClose, currentRole, skills, e
       setResults(data);
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Failed to generate summary. Please check your network and try again.');
     } finally {
       setLoading(false);
     }
@@ -117,6 +126,23 @@ export default function AiSummaryModal({ isOpen, onClose, currentRole, skills, e
             )}
           </button>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 flex items-start gap-3 p-3.5 rounded-xl bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200 dark:border-rose-900 text-xs">
+            <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold">{error}</p>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                className="mt-2 inline-flex items-center gap-1 font-semibold underline text-rose-700 dark:text-rose-300 hover:opacity-80"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Results */}
         {results?.variations && (

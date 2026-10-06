@@ -24,6 +24,43 @@ export function getAiStatus() {
   };
 }
 
+// Robust JSON extractor for LLM output
+function extractJson(text) {
+  if (!text || typeof text !== 'string') return null;
+  const trimmed = text.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {}
+
+  // Strip markdown code block fences ```json ... ```
+  const codeBlockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (codeBlockMatch) {
+    try {
+      return JSON.parse(codeBlockMatch[1].trim());
+    } catch {}
+  }
+
+  // Find outermost object { ... }
+  const firstBrace = trimmed.indexOf('{');
+  const lastBrace = trimmed.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    try {
+      return JSON.parse(trimmed.slice(firstBrace, lastBrace + 1));
+    } catch {}
+  }
+
+  // Find outermost array [ ... ]
+  const firstBracket = trimmed.indexOf('[');
+  const lastBracket = trimmed.lastIndexOf(']');
+  if (firstBracket !== -1 && lastBracket > firstBracket) {
+    try {
+      return JSON.parse(trimmed.slice(firstBracket, lastBracket + 1));
+    } catch {}
+  }
+
+  return null;
+}
+
 // Helper to call Gemini if client is ready, or null if failed/no key
 async function callGeminiPrompt(systemPrompt, userPrompt) {
   if (!aiClient) return null;
@@ -36,8 +73,8 @@ async function callGeminiPrompt(systemPrompt, userPrompt) {
       });
       const text = response?.output_text;
       if (text) {
-        const cleaned = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
-        return JSON.parse(cleaned);
+        const parsed = extractJson(text);
+        if (parsed) return parsed;
       }
     } catch (err) {
       console.warn(`[AI Service] ${model} prompt failed:`, err.message);

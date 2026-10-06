@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import { Sparkles, Check, Loader2, X, ArrowRight, Zap, Target } from 'lucide-react';
+import { Sparkles, Check, Loader2, X, ArrowRight, Zap, Target, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function AiBulletModal({ isOpen, onClose, initialText, role, techStack, onApplyBullet }) {
   const [text, setText] = useState(initialText || '');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export default function AiBulletModal({ isOpen, onClose, initialText, role, tech
   const handleImprove = async (inputText = text) => {
     if (!inputText || inputText.trim() === '') return;
     setLoading(true);
+    setError(null);
     try {
       const data = await api.improveBullet({
         text: inputText,
@@ -29,6 +31,7 @@ export default function AiBulletModal({ isOpen, onClose, initialText, role, tech
       setResult(data);
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Failed to enhance bullet point. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -89,6 +92,23 @@ export default function AiBulletModal({ isOpen, onClose, initialText, role, tech
             </button>
           </div>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-5 flex items-start gap-3 p-3.5 rounded-xl bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200 dark:border-rose-900 text-xs">
+            <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold">{error}</p>
+              <button
+                type="button"
+                onClick={() => handleImprove()}
+                className="mt-2 inline-flex items-center gap-1 font-semibold underline text-rose-700 dark:text-rose-300 hover:opacity-80"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* AI Critique */}
         {result?.critique && (

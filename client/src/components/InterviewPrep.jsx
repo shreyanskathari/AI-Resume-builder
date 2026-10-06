@@ -14,31 +14,33 @@ import {
   BookOpen,
   ChevronRight,
   Flame,
-  Star
+  Star,
+  AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function InterviewPrep({ currentResume }) {
   const [activeCategory, setActiveCategory] = useState('projects'); // 'projects' | 'technical' | 'hr'
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [interviewData, setInterviewData] = useState(null);
   const [revealedAnswers, setRevealedAnswers] = useState({});
   const [practiceNotes, setPracticeNotes] = useState({});
 
   useEffect(() => {
-    if (currentResume) {
-      loadQuestions();
-    }
+    loadQuestions();
   }, [currentResume]);
 
   const loadQuestions = async () => {
-    if (!currentResume) return;
+    const resumeToUse = currentResume || {};
     setLoading(true);
+    setError(null);
     try {
-      const data = await api.getInterviewPrep(currentResume, currentResume.targetRole || 'Software Engineer');
+      const data = await api.getInterviewPrep(resumeToUse, resumeToUse.targetRole || 'Software Engineer');
       setInterviewData(data);
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Failed to generate interview questions. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -79,6 +81,23 @@ export default function InterviewPrep({ currentResume }) {
           Regenerate Questions
         </button>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200 dark:border-rose-900 text-xs">
+          <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold">{error}</p>
+            <button
+              type="button"
+              onClick={loadQuestions}
+              className="mt-1.5 inline-flex items-center gap-1 font-semibold underline text-rose-700 dark:text-rose-300 hover:opacity-80"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Category Tabs */}
       <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 pb-2 text-xs font-semibold relative">

@@ -173,6 +173,12 @@ export default function ResumeBuilder({ initialResume, onResumeUpdated }) {
     };
   }, [initialResume]);
 
+  useEffect(() => {
+    if (resume && onResumeUpdated) {
+      onResumeUpdated(resume);
+    }
+  }, [resume]);
+
   if (!resume) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center min-h-[380px]">

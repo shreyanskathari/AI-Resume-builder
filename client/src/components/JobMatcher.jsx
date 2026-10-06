@@ -25,11 +25,13 @@ export default function JobMatcher({ currentResume, onNavigateToBuilder }) {
     `We are looking for a Junior Software Engineer with experience in TypeScript, React, Node.js, and relational databases (PostgreSQL). Knowledge of Docker containerization, RESTful APIs, distributed systems, and CI/CD pipelines is highly desirable. Candidates should demonstrate clean coding practices, version control with Git, and strong analytical problem-solving skills.`
   );
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
   const handleCompare = async () => {
-    if (!jobDescription.trim() || !currentResume) return;
+    if (!jobDescription.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const data = await api.matchJob(currentResume, jobDescription, jobTitle, company, true);
       setResult(data);
@@ -40,6 +42,7 @@ export default function JobMatcher({ currentResume, onNavigateToBuilder }) {
       }
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Failed to match job description. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -146,6 +149,22 @@ export default function JobMatcher({ currentResume, onNavigateToBuilder }) {
                 </>
               )}
             </button>
+
+            {error && (
+              <div className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200 border border-rose-200 dark:border-rose-900 text-xs">
+                <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold">{error}</p>
+                  <button
+                    type="button"
+                    onClick={handleCompare}
+                    className="mt-1.5 inline-flex items-center gap-1 font-semibold underline text-rose-700 dark:text-rose-300 hover:opacity-80"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

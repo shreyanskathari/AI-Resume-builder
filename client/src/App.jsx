@@ -12,14 +12,15 @@ import AuthModal from './components/AuthModal';
 import PdfUploadModal from './components/PdfUploadModal';
 import AtsScoreModal from './components/AtsScoreModal';
 import AiChatbot from './components/AiChatbot';
+import { getStarterResume } from './starterResume';
 import { Loader2, Heart, Sparkles, FileText, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function MainContent() {
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [currentResume, setCurrentResume] = useState(null);
-  const [loadingResume, setLoadingResume] = useState(true);
+  const [currentResume, setCurrentResume] = useState(() => getStarterResume());
+  const [loadingResume, setLoadingResume] = useState(false);
 
   // Global modals
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -37,16 +38,18 @@ function MainContent() {
       const resumes = await api.getResumes();
       if (resumes && resumes.length > 0) {
         setCurrentResume(resumes[0]);
-        // Also get initial ATS audit safely
         try {
           const atsData = await api.getAtsScore(resumes[0], resumes[0].targetRole);
           setAtsAnalysis(atsData);
         } catch (atsErr) {
           console.warn('ATS initial audit skipped:', atsErr.message);
         }
+      } else {
+        setCurrentResume(prev => prev || getStarterResume(user));
       }
     } catch (err) {
-      console.warn('Could not load resumes:', err.message);
+      console.warn('Could not load resumes from server (using starter):', err.message);
+      setCurrentResume(prev => prev || getStarterResume(user));
     } finally {
       setLoadingResume(false);
     }

@@ -36,8 +36,8 @@ router.post('/chat', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
-// Require auth for AI resume editing & generative transformations
-router.use(authMiddleware);
+// Support both authenticated candidates and guest explorers for AI services
+router.use(optionalAuthMiddleware);
 
 // 1. Generate Summary
 router.post('/summary', async (req, res) => {
@@ -138,7 +138,7 @@ router.post('/match-job', async (req, res) => {
       upskillingPlan: upskilling
     };
 
-    if (saveToHistory) {
+    if (saveToHistory && req.user) {
       db.saveJobMatch({
         userId: req.user.id,
         resumeId: resume.id,
